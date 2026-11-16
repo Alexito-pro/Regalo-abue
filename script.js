@@ -72,9 +72,25 @@ function stepMemory(amount) {
 lightbox.querySelector(".lightbox-close").addEventListener("click", () => lightbox.close());
 lightbox.querySelector(".lightbox-prev").addEventListener("click", () => stepMemory(-1));
 lightbox.querySelector(".lightbox-next").addEventListener("click", () => stepMemory(1));
-lightbox.addEventListener("click", (event) => {
-  if (event.target === lightbox) lightbox.close();
-});
+if (!("closedBy" in HTMLDialogElement.prototype)) {
+  const pointerIsOutside = (event) => {
+    const bounds = lightbox.getBoundingClientRect();
+    return event.clientX < bounds.left || event.clientX > bounds.right ||
+      event.clientY < bounds.top || event.clientY > bounds.bottom;
+  };
+  let pressedOutside = false;
+
+  lightbox.addEventListener("pointerdown", (event) => {
+    pressedOutside = pointerIsOutside(event);
+  });
+  lightbox.addEventListener("pointerup", (event) => {
+    if (pressedOutside && pointerIsOutside(event)) lightbox.close();
+    pressedOutside = false;
+  });
+  lightbox.addEventListener("pointercancel", () => {
+    pressedOutside = false;
+  });
+}
 lightbox.addEventListener("keydown", (event) => {
   if (event.key === "ArrowLeft") stepMemory(-1);
   if (event.key === "ArrowRight") stepMemory(1);
